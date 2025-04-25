@@ -1,0 +1,6 @@
+@Redde_HostAddress = http://localhost:5017
+
+GET {{Redde_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
