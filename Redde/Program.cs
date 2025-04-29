@@ -3,6 +3,8 @@ using Redde.Infraestructure.Persistence;
 using DotNetEnv;
 using Redde.Application.Interfaces;
 using Redde.Infrastructure.Persistence;
+using Redde.Application.Services;
+using Redde.Infrastructure.Seeders;
 
 Env.Load();
 
@@ -27,6 +29,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new Exception("JWT_SECRET is missing!");
 var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "DefaultIssuer";
@@ -47,5 +52,11 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await DbSeeder.SeedRolesAsync(dbContext);
+}
 
 app.Run();

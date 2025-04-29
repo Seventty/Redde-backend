@@ -7,8 +7,8 @@ namespace Redde.Infrastructure.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class
     {
-        protected readonly ApplicationDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        private readonly ApplicationDbContext _context;
+        private readonly DbSet<T> _dbSet;
 
         public Repository(ApplicationDbContext context)
         {
@@ -18,20 +18,46 @@ namespace Redde.Infrastructure.Repositories
 
         public async Task<T> GetByIdAsync(int id)
         {
-            return await _dbSet.FindAsync(id) ?? throw new KeyNotFoundException($"{typeof(T).Name} with id {id} not found.");
+            return await _dbSet.FindAsync(id);
         }
+
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
-        public void Update(T entity)
+
+        public async Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
         {
-            _dbSet.Update(entity);
+            IQueryable<T> query = _dbSet.AsQueryable();
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<T> FindAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet.AsQueryable();
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
 
         public async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
+        }
+
+        public void Update(T entity)
+        {
+            _dbSet.Update(entity);
         }
 
         public async Task DeleteAsync(int id)
