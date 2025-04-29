@@ -10,5 +10,7 @@
         public int CompanyId { get; set; }
         public Role Role { get; set; } = null!;
         public Company? Company { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 }
