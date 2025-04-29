@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Redde.Infraestructure.Persistence;
 using DotNetEnv;
+using Redde.Application.Interfaces;
+using Redde.Infrastructure.Persistence;
 
 Env.Load();
 
@@ -23,6 +25,8 @@ var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new Exception("JWT_SECRET is missing!");
 var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "DefaultIssuer";
