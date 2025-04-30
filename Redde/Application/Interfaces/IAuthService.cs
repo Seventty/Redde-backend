@@ -7,5 +7,7 @@ namespace Redde.Application.Interfaces
         Task<AuthResponse> RegisterAsync(RegisterRequest request);
         Task<AuthResponse> LoginAsync(LoginRequest request);
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request);
+        Task LogoutAsync(int userId);
     }
 }

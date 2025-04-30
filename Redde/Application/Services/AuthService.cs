@@ -1,6 +1,7 @@
 ﻿using Redde.Application.DTOs.Auth;
 using Redde.Application.Interfaces;
 using Redde.Domain.Entities;
+using System.Security.Claims;
 
 namespace Redde.Application.Services
 {
@@ -100,6 +101,58 @@ namespace Redde.Application.Services
                 throw new Exception("User not found");
             }
 
+        }
+
+        public async Task LogoutAsync(int userId)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request)
+        {
+            if(string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.RefreshToken))
+                throw new Exception("Invalid token or refresh token");
+            
+            var principal = _jwtService.GetPrincipalFromExpiredToken(request.Token) ?? throw new Exception("Invalid token");
+
+            var email = (principal.FindFirst(ClaimTypes.Email)?.Value) ?? throw new Exception("Invalid token payload");
+
+            var user = await _unitOfWork.Users.FindAsync(
+                u => u.Email.ToLower() == email.ToLower(),
+                u => u.Role
+            );
+
+            if (user == null || user.RefreshToken != request.RefreshToken)
+               throw new Exception("Invalid token or refresh token");
+
+            if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                throw new Exception("Refresh token expired");
+
+            var newAccessToken = _jwtService.GenerateAccessToken(user);
+            var (newRefreshToken, newRefreshTokenExpiryTime) = _jwtService.GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = newRefreshTokenExpiryTime;
+            await _unitOfWork.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Token = newAccessToken,
+                Expiration = DateTime.UtcNow.AddMinutes(
+                    int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRES_MINUTES") ?? "60")
+                ),
+                Email = user.Email,
+                Name = user.Name
+            };
         }
 
         private static string HashPassword(string password)
