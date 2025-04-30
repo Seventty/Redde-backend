@@ -102,6 +102,20 @@ namespace Redde.Application.Services
 
         }
 
+        public async Task LogoutAsync(int userId)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         private static string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
