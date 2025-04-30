@@ -33,6 +33,14 @@ namespace Redde.Controllers
             return Ok(new { message = "If the email exists, a password reset link has been sent." });
         }
 
+        [HttpPost("refresh-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            var response = await _authService.RefreshTokenAsync(request);
+            return Ok(response);
+        }
+
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
