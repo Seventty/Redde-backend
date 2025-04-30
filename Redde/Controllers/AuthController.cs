@@ -41,6 +41,14 @@ namespace Redde.Controllers
             return Ok(response);
         }
 
+        [HttpPost("google")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginWithGoogle([FromBody] OAuthRequest request)
+        {
+            var response = await _authService.LoginWithGoogleAsync(request);
+            return Ok(response);
+        }
+
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()

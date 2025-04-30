@@ -8,6 +8,7 @@ namespace Redde.Application.Interfaces
         Task<AuthResponse> LoginAsync(LoginRequest request);
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
         Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request);
+        Task<AuthResponse> LoginWithGoogleAsync(OAuthRequest request);
         Task LogoutAsync(int userId);
     }
 }
