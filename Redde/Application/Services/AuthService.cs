@@ -1,4 +1,5 @@
-﻿using Redde.Application.DTOs.Auth;
+﻿using Google.Apis.Auth;
+using Redde.Application.DTOs.Auth;
 using Redde.Application.Interfaces;
 using Redde.Domain.Entities;
 using System.Security.Claims;
@@ -147,6 +148,54 @@ namespace Redde.Application.Services
             return new AuthResponse
             {
                 Token = newAccessToken,
+                Expiration = DateTime.UtcNow.AddMinutes(
+                    int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRES_MINUTES") ?? "60")
+                ),
+                Email = user.Email,
+                Name = user.Name
+            };
+        }
+
+        public async Task<AuthResponse> LoginWithGoogleAsync(OAuthRequest request)
+        {
+            var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+
+            if (payload == null)
+                throw new Exception("Invalid token");
+
+            var user = await _unitOfWork.Users.FindAsync(
+                u => u.Provider == "google" && u.ProviderId == payload.Subject,
+                u => u.Role
+            );
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Name = payload.Name ?? payload.Email.Split('@')[0],
+                    Email = payload.Email,
+                    Provider = "google",
+                    ProviderId = payload.Subject,
+                    RoleId = 1
+                };
+
+                await _unitOfWork.Users.AddAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+
+                // 🔁 recargar para incluir el Role
+                user = await _unitOfWork.Users.FindAsync(u => u.Id == user.Id, u => u.Role);
+            }
+
+            var accessToken = _jwtService.GenerateAccessToken(user);
+            var (refreshToken, refreshTokenExpiryTime) = _jwtService.GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = refreshTokenExpiryTime;
+            await _unitOfWork.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Token = accessToken,
                 Expiration = DateTime.UtcNow.AddMinutes(
                     int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRES_MINUTES") ?? "60")
                 ),
