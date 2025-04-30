@@ -49,6 +49,14 @@ namespace Redde.Controllers
             return Ok(response);
         }
 
+        [HttpPost("github")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginWithGitHub([FromBody] OauthCodeRequest request)
+        {
+            var result = await _authService.LoginWithGitHubAsync(request);
+            return Ok(result);
+        }
+
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
