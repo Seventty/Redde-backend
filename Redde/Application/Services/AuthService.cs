@@ -3,6 +3,7 @@ using Redde.Application.DTOs.Auth;
 using Redde.Application.Interfaces;
 using Redde.Domain.Entities;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace Redde.Application.Services
 {
@@ -182,7 +183,6 @@ namespace Redde.Application.Services
                 await _unitOfWork.Users.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                // 🔁 recargar para incluir el Role
                 user = await _unitOfWork.Users.FindAsync(u => u.Id == user.Id, u => u.Role);
             }
 
@@ -203,6 +203,86 @@ namespace Redde.Application.Services
                 Name = user.Name
             };
         }
+
+        public async Task<AuthResponse> LoginWithGitHubAsync(OauthCodeRequest request)
+        {
+            var clientId = Environment.GetEnvironmentVariable("GITHUB_CLIENT_ID");
+            var clientSecret = Environment.GetEnvironmentVariable("GITHUB_CLIENT_SECRET");
+
+            using var httpClient = new HttpClient();
+
+            var tokenResponse = await httpClient.PostAsync(
+                "https://github.com/login/oauth/access_token",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+            { "client_id", clientId },
+            { "client_secret", clientSecret },
+            { "code", request.Code }
+                })
+            );
+
+            var tokenContent = await tokenResponse.Content.ReadAsStringAsync();
+
+            if (!tokenResponse.IsSuccessStatusCode)
+                throw new Exception("Error al obtener access_token de GitHub");
+
+            var parsed = System.Web.HttpUtility.ParseQueryString(tokenContent);
+            var accessToken = parsed["access_token"];
+
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("ReddeApp");
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var userResponse = await httpClient.GetAsync("https://api.github.com/user");
+            var userJson = await userResponse.Content.ReadAsStringAsync();
+
+            var githubUser = JsonSerializer.Deserialize<GithubUser>(userJson, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (githubUser is null)
+                throw new Exception("Error obteniendo usuario desde GitHub");
+
+            var user = await _unitOfWork.Users.FindAsync(
+                u => u.Provider == "github" && u.ProviderId == githubUser.Id.ToString(),
+                u => u.Role
+            );
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Name = githubUser.Name ?? githubUser.Login,
+                    Email = githubUser.Email ?? $"{githubUser.Login}@github.com", // fallback
+                    Provider = "github",
+                    ProviderId = githubUser.Id.ToString(),
+                    RoleId = 1
+                };
+
+                await _unitOfWork.Users.AddAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+
+                user = await _unitOfWork.Users.FindAsync(u => u.Id == user.Id, u => u.Role);
+            }
+
+            var jwt = _jwtService.GenerateAccessToken(user);
+            var (refreshToken, refreshTokenExpiryTime) = _jwtService.GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = refreshTokenExpiryTime;
+            await _unitOfWork.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Token = jwt,
+                Expiration = DateTime.UtcNow.AddMinutes(
+                    int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRES_MINUTES") ?? "60")
+                ),
+                Email = user.Email,
+                Name = user.Name
+            };
+        }
+
 
         private static string HashPassword(string password)
         {
