@@ -7,7 +7,6 @@ public class Company
     public int RNC { get; set; }
     public string Name { get; set; } = null!;
     public string CommercialName { get; set; } = null!;
-    public string Phone { get; set; } = null!;
 
     public int OwnerId { get; set; }
     public User Owner { get; set; } = null!;
