@@ -13,6 +13,12 @@ using FluentValidation;
 
 Env.Load();
 
+var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
+                       $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+                       $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+                       $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
+                       $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};";
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configurar el puerto dinámico para Railway
@@ -52,12 +58,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
-                       $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-                       $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
-                       $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
-                       $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};";
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -92,6 +92,11 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero // Reduce the default clock skew
     };
 });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
+    .AddPolicy("OwnerOnly", policy => policy.RequireRole("Owner"))
+    .AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
 
 var app = builder.Build();
 
