@@ -65,5 +65,21 @@ namespace Redde.Infrastructure.Repositories
             var entity = await GetByIdAsync(id);
             _dbSet.Remove(entity);
         }
+
+        public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet.Where(predicate);
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return await query.ToListAsync();
+        }
+
     }
 }
