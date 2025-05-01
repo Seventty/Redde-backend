@@ -28,7 +28,7 @@ namespace Redde.Application.Services
                 Email = request.Email,
                 Password = HashPassword(request.Password),
                 Name = request.Name,
-                RoleId = 1,
+                RoleId = 2,
             };
 
             await _unitOfWork.Users.AddAsync(user);
