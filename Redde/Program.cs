@@ -4,7 +4,6 @@ using DotNetEnv;
 using Redde.Application.Interfaces;
 using Redde.Infrastructure.Persistence;
 using Redde.Application.Services;
-using Redde.Infrastructure.Seeders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -128,7 +127,6 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DbSeeder.SeedRolesAsync(dbContext);
     await DatabaseSeeder.SeedAsync(dbContext);
 }
 
