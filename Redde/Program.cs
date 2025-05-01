@@ -10,6 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FluentValidation.AspNetCore;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Redde.Application.Authorization;
 
 Env.Load();
 
@@ -97,6 +99,14 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
     .AddPolicy("OwnerOnly", policy => policy.RequireRole("Owner"))
     .AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<IAuthorizationHandler, IsOwnerOfCompanyHandler>();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("IsOwnerOfCompany", policy =>
+        policy.Requirements.Add(new IsOwnerOfCompanyRequirement()));
 
 var app = builder.Build();
 
