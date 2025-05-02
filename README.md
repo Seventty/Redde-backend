@@ -26,11 +26,7 @@ Redde es una plataforma de gestión de compañías orientada a entidades guberna
 
 ---
 
-# Redde – Plataforma de gestión de usuarios y empresas
-
-Redde es una plataforma donde los usuarios pueden registrarse, autenticarse y gestionar empresas, todo con control de acceso según su rol.
-
-## ¿Qué tiene?
+## Features del proyecto:
 
 - **Login y Registro clásico + OAuth (Google y GitHub)**  
   Autenticación segura usando JWT. Se guarda el token en `localStorage` y se usa un interceptor para enviarlo en cada request.
@@ -55,5 +51,3 @@ Redde es una plataforma donde los usuarios pueden registrarse, autenticarse y ge
 Bajo la necesidad de un código que sea:
 - Fácil de mantener.
 - Listo para escalar.
-
-
