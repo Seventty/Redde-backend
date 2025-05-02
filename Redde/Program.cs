@@ -111,6 +111,8 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("IsOwnerOfCompany", policy =>
         policy.Requirements.Add(new IsOwnerOfCompanyRequirement()));
 
+builder.Services.AddHttpClient<DgiiService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

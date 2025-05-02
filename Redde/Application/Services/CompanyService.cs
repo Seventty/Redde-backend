@@ -51,11 +51,11 @@ public class CompanyService(IUnitOfWork unitOfWork) : ICompanyService
             RNC = c.RNC,
             Name = c.Name,
             CommercialName = c.CommercialName,
-            Category = c.Category.Name,
-            PaymentScheme = c.PaymentScheme.Name,
-            State = c.State.Name,
-            EconomicActivity = c.EconomicActivity.Name,
-            GovernmentBranch = c.GovernmentBranch.Name
+            Category = new CatalogResponse { Id = c.Category.Id, Name = c.Category.Name },
+            PaymentScheme = new CatalogResponse { Id = c.PaymentScheme.Id, Name = c.PaymentScheme.Name },
+            State = new CatalogResponse { Id = c.State.Id, Name = c.State.Name },
+            EconomicActivity = new CatalogResponse { Id = c.EconomicActivity.Id, Name = c.EconomicActivity.Name },
+            GovernmentBranch = new CatalogResponse { Id = c.GovernmentBranch.Id, Name = c.GovernmentBranch.Name }
         });
     }
 
@@ -77,11 +77,11 @@ public class CompanyService(IUnitOfWork unitOfWork) : ICompanyService
             RNC = company.RNC,
             Name = company.Name,
             CommercialName = company.CommercialName,
-            Category = company.Category.Name,
-            PaymentScheme = company.PaymentScheme.Name,
-            State = company.State.Name,
-            EconomicActivity = company.EconomicActivity.Name,
-            GovernmentBranch = company.GovernmentBranch.Name
+            Category = new CatalogResponse { Id = company.Category.Id, Name = company.Category.Name },
+            PaymentScheme = new CatalogResponse { Id = company.PaymentScheme.Id, Name = company.PaymentScheme.Name },
+            State = new CatalogResponse { Id = company.State.Id, Name = company.State.Name },
+            EconomicActivity = new CatalogResponse { Id = company.EconomicActivity.Id, Name = company.EconomicActivity.Name },
+            GovernmentBranch = new CatalogResponse { Id = company.GovernmentBranch.Id, Name = company.GovernmentBranch.Name }
         };
     }
 
