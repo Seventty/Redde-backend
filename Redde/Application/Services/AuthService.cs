@@ -256,7 +256,7 @@ namespace Redde.Application.Services
                     Email = githubUser.Email ?? $"{githubUser.Login}@github.com", // fallback
                     Provider = "github",
                     ProviderId = githubUser.Id.ToString(),
-                    RoleId = 1
+                    RoleId = 2
                 };
 
                 await _unitOfWork.Users.AddAsync(user);

@@ -2,19 +2,14 @@
 
 [ApiController]
 [Route("api/[controller]")]
-public class DgiiController : ControllerBase
+public class DgiiController(DgiiScraperService scraper) : ControllerBase
 {
-    private readonly DgiiService _dgiiService;
-
-    public DgiiController(DgiiService dgiiService)
-    {
-        _dgiiService = dgiiService;
-    }
+    private readonly DgiiScraperService _scraper = scraper;
 
     [HttpGet("{rnc}")]
-    public async Task<IActionResult> Get(string rnc)
+    public async Task<IActionResult> GetDatos(string rnc)
     {
-        var result = await _dgiiService.ConsultarRNC(rnc);
+        var result = await _scraper.ConsultarRnc(rnc);
         return Ok(result);
     }
 }

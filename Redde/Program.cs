@@ -111,7 +111,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("IsOwnerOfCompany", policy =>
         policy.Requirements.Add(new IsOwnerOfCompanyRequirement()));
 
-builder.Services.AddHttpClient<DgiiService>();
+builder.Services.AddHttpClient<DgiiScraperService>();
 
 var app = builder.Build();
 
