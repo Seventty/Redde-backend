@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Redde.Infraestructure.Persistence;
@@ -11,9 +12,11 @@ using Redde.Infraestructure.Persistence;
 namespace Redde.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250511090807_FlattenCompanyMetadata")]
+    partial class FlattenCompanyMetadata
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,9 +60,8 @@ namespace Redde.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("RNC")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("RNC")
+                        .HasColumnType("integer");
 
                     b.Property<string>("State")
                         .IsRequired()

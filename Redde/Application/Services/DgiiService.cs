@@ -1,75 +1,69 @@
-﻿using System.Net.Http.Headers;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
+using System.Net.Http.Headers;
 
-public class DgiiService
+public class DgiiScraperService(HttpClient httpClient)
 {
-    private readonly HttpClient _http;
+    private readonly HttpClient _httpClient = httpClient;
 
-    public DgiiService(HttpClient http)
+    public async Task<Dictionary<string, string>> ConsultarRnc(string rnc)
     {
-        _http = http;
-    }
-
-    public async Task<DgiiResponse> ConsultarRNC(string rnc)
-    {
-        var baseUrl = "https://dgii.gov.do/app/WebApps/ConsultasWeb2/ConsultasWeb/consultas/rnc.aspx";
-
-        var initialResponse = await _http.GetAsync(baseUrl);
-        var html = await initialResponse.Content.ReadAsStringAsync();
-
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
-
-        string viewState = doc.DocumentNode
-            .SelectSingleNode("//input[@id='__VIEWSTATE']")
-            ?.GetAttributeValue("value", "") ?? "";
-
-        string eventValidation = doc.DocumentNode
-            .SelectSingleNode("//input[@id='__EVENTVALIDATION']")
-            ?.GetAttributeValue("value", "") ?? "";
-
-        var form = new Dictionary<string, string>
+        try
         {
-            ["__VIEWSTATE"] = viewState,
-            ["__EVENTVALIDATION"] = eventValidation,
-            ["ctl00$ctl00$ctl00$MainContent$MainContent$txtRncCedula"] = rnc,
-            ["ctl00$ctl00$ctl00$MainContent$MainContent$btnBuscarPorRNC"] = "Buscar"
+            var url = "https://www.dgii.gov.do/app/WebApps/ConsultasWeb/consultas/rnc.aspx";
+
+            var initialResponse = await _httpClient.GetAsync(url);
+            var initialHtml = await initialResponse.Content.ReadAsStringAsync();
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(initialHtml);
+
+            string viewState = doc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATE']")?.GetAttributeValue("value", "") ?? "";
+            string eventValidation = doc.DocumentNode.SelectSingleNode("//input[@id='__EVENTVALIDATION']")?.GetAttributeValue("value", "") ?? "";
+
+            var formData = new Dictionary<string, string>
+        {
+            { "__VIEWSTATE", viewState },
+            { "__EVENTVALIDATION", eventValidation },
+            { "__EVENTTARGET", "" },
+            { "__EVENTARGUMENT", "" },
+            { "ctl00$cphMain$txtRNCCedula", rnc },
+            { "ctl00$cphMain$btnBuscarPorRNC", "Buscar" }
         };
 
-        var postContent = new FormUrlEncodedContent(form);
+            var content = new FormUrlEncodedContent(formData);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
-        var postResponse = await _http.PostAsync(baseUrl, postContent);
-        var resultHtml = await postResponse.Content.ReadAsStringAsync();
+            var postResponse = await _httpClient.PostAsync(url, content);
+            var responseHtml = await postResponse.Content.ReadAsStringAsync();
 
-        var resultDoc = new HtmlDocument();
-        resultDoc.LoadHtml(resultHtml);
+            var resultDoc = new HtmlDocument();
+            resultDoc.LoadHtml(responseHtml);
 
-        string nombre = resultDoc.DocumentNode
-            .SelectSingleNode("//span[@id='MainContent_MainContent_lblNombre']")
-            ?.InnerText.Trim() ?? "";
+            var table = resultDoc.DocumentNode.SelectSingleNode("//table[@id='ctl00_cphMain_dvDatosContribuyentes']");
+            if (table == null)
+                return new Dictionary<string, string> { { "error", "No se encontraron resultados para ese RNC o Cédula." } };
 
-        string estado = resultDoc.DocumentNode
-            .SelectSingleNode("//span[@id='MainContent_MainContent_lblEstado']")
-            ?.InnerText.Trim() ?? "";
+            var rows = table.SelectNodes(".//tr");
+            if (rows == null)
+                return new Dictionary<string, string> { { "error", "No se encontraron filas en la tabla de resultados." } };
 
-        string tipo = resultDoc.DocumentNode
-            .SelectSingleNode("//span[@id='MainContent_MainContent_lblTipo']")
-            ?.InnerText.Trim() ?? "";
+            var result = new Dictionary<string, string>();
+            foreach (var row in rows)
+            {
+                var cells = row.SelectNodes(".//td");
+                if (cells?.Count != 2) continue;
 
-        return new DgiiResponse
+                string key = HtmlEntity.DeEntitize(cells[0].InnerText.Trim());
+                string value = HtmlEntity.DeEntitize(cells[1].InnerText.Trim());
+                result[key] = value;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
         {
-            Rnc = rnc,
-            Nombre = nombre,
-            Estado = estado,
-            Tipo = tipo
-        };
+            return new Dictionary<string, string> { { "error", "Ocurrió un error procesando la solicitud: " + ex.Message } };
+        }
     }
-}
 
-public class DgiiResponse
-{
-    public string Rnc { get; set; } = "";
-    public string Nombre { get; set; } = "";
-    public string Estado { get; set; } = "";
-    public string Tipo { get; set; } = "";
 }

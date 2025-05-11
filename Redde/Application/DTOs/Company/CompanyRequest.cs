@@ -2,13 +2,12 @@
 
 public class CompanyRequest
 {
-    public int RNC { get; set; }
+    public string RNC { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string CommercialName { get; set; } = null!;
-
-    public int CategoryId { get; set; }
-    public int PaymentSchemeId { get; set; }
-    public int StateId { get; set; }
-    public int EconomicActivityId { get; set; }
-    public int GovernmentBranchId { get; set; }
+    public string Category { get; set; } = null!;
+    public string PaymentScheme { get; set; } = null!;
+    public string State { get; set; } = null!;
+    public string EconomicActivity { get; set; } = null!;
+    public string GovernmentBranch { get; set; } = null!;
 }

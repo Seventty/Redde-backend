@@ -1,28 +1,17 @@
 ﻿using Redde.Domain.Entities;
-using Redde.Domain.Entities.CompanyEntities;
 
 public class Company
 {
     public int Id { get; set; }
-    public int RNC { get; set; }
+    public string RNC { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string CommercialName { get; set; } = null!;
 
     public int OwnerId { get; set; }
     public User Owner { get; set; } = null!;
-
-    public int CategoryId { get; set; }
-    public CompanyCategory Category { get; set; } = null!;
-
-    public int PaymentSchemeId { get; set; }
-    public PaymentScheme PaymentScheme { get; set; } = null!;
-
-    public int StateId { get; set; }
-    public CompanyState State { get; set; } = null!;
-
-    public int EconomicActivityId { get; set; }
-    public EconomicActivity EconomicActivity { get; set; } = null!;
-
-    public int GovernmentBranchId { get; set; }
-    public GovernmentBranch GovernmentBranch { get; set; } = null!;
+    public string Category { get; set; } = null!;
+    public string PaymentScheme { get; set; } = null!;
+    public string State { get; set; } = null!;
+    public string EconomicActivity { get; set; } = null!;
+    public string GovernmentBranch { get; set; } = null!;
 }
